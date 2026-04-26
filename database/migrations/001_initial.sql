@@ -5,7 +5,7 @@
 
 -- 1. Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS vector;
+-- CREATE EXTENSION IF NOT EXISTS vector;
 
 -- 2. Users
 CREATE TABLE IF NOT EXISTS users (
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS concepts (
   label TEXT NOT NULL,
   normalized TEXT NOT NULL,
   usage_count INT DEFAULT 0,
-  embedding VECTOR(384),
+  embedding TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(type, normalized)
 );
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS analysis_events (
   type TEXT NOT NULL,
   content TEXT NOT NULL,
   concept_id UUID REFERENCES concepts(id) ON DELETE SET NULL,
-  embedding VECTOR(384),
+  embedding TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 

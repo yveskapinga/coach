@@ -211,19 +211,59 @@ async function dayRoutes(fastify, options) {
     }
   });
 
-  // GET /days — list user days
+  // GET /days — list user days with pagination
   fastify.get('/days', { preHandler: authenticate }, async (request, reply) => {
     const userId = request.user.id;
+    const page = Math.max(1, parseInt(request.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(request.query.limit, 10) || 20));
+    const offset = (page - 1) * limit;
+
     try {
-      const result = await query(
-        `SELECT * FROM days WHERE user_id = $1 ORDER BY date DESC`,
+      const countResult = await query(
+        `SELECT COUNT(*) as total FROM days WHERE user_id = $1`,
         [userId],
         userId
       );
-      return reply.send({ days: result.rows });
+      const total = parseInt(countResult.rows[0].total, 10);
+
+      const result = await query(
+        `SELECT * FROM days WHERE user_id = $1 ORDER BY date DESC LIMIT $2 OFFSET $3`,
+        [userId, limit, offset],
+        userId
+      );
+
+      return reply.send({
+        days: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (err) {
       fastify.log.error(err);
       return reply.status(500).send({ error: 'Failed to list days' });
+    }
+  });
+
+  // GET /days/today — get today's day for current user
+  fastify.get('/days/today', { preHandler: authenticate }, async (request, reply) => {
+    const userId = request.user.id;
+    const today = request.query.date || new Date().toISOString().split('T')[0];
+    try {
+      const result = await query(
+        `SELECT * FROM days WHERE user_id = $1 AND date = $2`,
+        [userId, today],
+        userId
+      );
+      if (result.rows.length === 0) {
+        return reply.status(404).send({ day: null });
+      }
+      return reply.send({ day: result.rows[0] });
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.status(500).send({ error: 'Failed to get today day' });
     }
   });
 

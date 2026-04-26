@@ -15,7 +15,7 @@ async function query(sql, params, userId = null) {
   const client = await pool.connect();
   try {
     if (userId) {
-      await client.query(`SET app.user_id = '${userId}';`);
+      await client.query('SELECT set_config($1, $2, false)', ['app.user_id', userId]);
     }
     const result = await client.query(sql, params);
     return result;
@@ -32,7 +32,7 @@ async function transaction(callback, userId = null) {
   try {
     await client.query('BEGIN');
     if (userId) {
-      await client.query(`SET app.user_id = '${userId}';`);
+      await client.query('SELECT set_config($1, $2, false)', ['app.user_id', userId]);
     }
     const result = await callback(client);
     await client.query('COMMIT');

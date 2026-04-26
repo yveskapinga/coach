@@ -30,6 +30,40 @@ app.register(conceptRoutes, { prefix: '' });
 app.register(analyticsRoutes, { prefix: '' });
 app.register(pushRoutes, { prefix: '' });
 
+// Global error handler
+app.setErrorHandler((error, request, reply) => {
+  // Ne jamais exposer les détails internes en production
+  const isDev = config.nodeEnv === 'development';
+
+  // Codes PostgreSQL courants
+  if (error.code === '23505') {
+    return reply.status(409).send({ error: 'This resource already exists' });
+  }
+  if (error.code === '23503') {
+    return reply.status(400).send({ error: 'Invalid reference' });
+  }
+  if (error.code === '22P02') {
+    return reply.status(400).send({ error: 'Invalid data format' });
+  }
+
+  // JWT errors
+  if (error.code === 'FST_JWT_NO_AUTHORIZATION_IN_HEADER') {
+    return reply.status(401).send({ error: 'Authorization required' });
+  }
+
+  app.log.error(error);
+
+  const statusCode = error.statusCode || 500;
+  const message = statusCode >= 500
+    ? 'An unexpected error occurred. Please try again later.'
+    : (error.message || 'Request failed');
+
+  return reply.status(statusCode).send({
+    error: message,
+    ...(isDev ? { stack: error.stack } : {}),
+  });
+});
+
 // Healthcheck
 app.get('/health', async () => ({ status: 'ok' }));
 

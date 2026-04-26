@@ -5,6 +5,7 @@ const { generateAccessToken, generateRefreshToken } = require('./tokens');
 const { query, transaction } = require('../db');
 const { authenticate } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
+const { sendPasswordReset } = require('./email');
 
 async function authRoutes(fastify, options) {
 
@@ -119,7 +120,7 @@ async function authRoutes(fastify, options) {
     }
 
     const userResult = await query(
-      `SELECT id FROM users WHERE email = $1 AND is_active = TRUE`,
+      `SELECT id, first_name FROM users WHERE email = $1 AND is_active = TRUE`,
       [email.trim().toLowerCase()]
     );
 
@@ -129,8 +130,9 @@ async function authRoutes(fastify, options) {
     }
 
     const userId = userResult.rows[0].id;
-    const token = generateRefreshToken(); // réutilise le générateur de token aléatoire
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+    const firstName = userResult.rows[0].first_name;
+    const token = generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await query(
       `INSERT INTO password_resets (id, user_id, token, expires_at)
@@ -138,8 +140,21 @@ async function authRoutes(fastify, options) {
       [uuidv4(), userId, token, expiresAt]
     );
 
-    // En production, envoyer l'email ici
-    return reply.send({ message: 'If the email exists, a reset link will be sent', debug_token: token });
+    try {
+      const result = await sendPasswordReset(email.trim().toLowerCase(), token, firstName);
+      if (result.sent) {
+        return reply.send({ message: 'Un email de réinitialisation a été envoyé' });
+      }
+      // Fallback if no SMTP configured
+      const isTest = process.env.NODE_ENV === 'test';
+      return reply.send({
+        message: 'Un email de réinitialisation a été envoyé',
+        ...(isTest ? { debug_token: token } : {}),
+      });
+    } catch (err) {
+      fastify.log.error(err);
+      return reply.status(500).send({ error: 'Failed to send reset email' });
+    }
   });
 
   // GET /auth/me

@@ -8,6 +8,11 @@ const { pool, query } = require('../src/db');
 describe('Coach-Life API', () => {
   let baseUrl;
   const userA = {};
+  const ts = Date.now();
+  const userAUsername = 'user_a_' + ts;
+  const userBUsername = 'user_b_' + ts;
+  const userAEmail = 'user_a_' + ts + '@test.com';
+  const userBEmail = 'user_b_' + ts + '@test.com';
   const userB = {};
 
   before(async () => {
@@ -41,9 +46,9 @@ describe('Coach-Life API', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'alice',
-          email: 'alice@mail.com',
-          first_name: 'Alice',
+          username: userAUsername,
+          email: userAEmail,
+          first_name: 'TestA',
           password: 'password123',
         }),
       });
@@ -58,9 +63,9 @@ describe('Coach-Life API', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'bob',
-          email: 'bob@mail.com',
-          first_name: 'Bob',
+          username: userBUsername,
+          email: userBEmail,
+          first_name: 'TestB',
           password: 'password123',
         }),
       });
@@ -75,9 +80,9 @@ describe('Coach-Life API', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'alice',
-          email: 'alice2@mail.com',
-          first_name: 'Alice2',
+          username: userAUsername,
+          email: 'other_' + ts + '@test.com',
+          first_name: 'Other',
           password: 'password123',
         }),
       });
@@ -88,7 +93,7 @@ describe('Coach-Life API', () => {
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'alice', password: 'password123' }),
+        body: JSON.stringify({ username: userAUsername, password: 'password123' }),
       });
       const body = await res.json();
       assert.strictEqual(res.status, 200);
@@ -101,7 +106,7 @@ describe('Coach-Life API', () => {
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'bob', password: 'password123' }),
+        body: JSON.stringify({ username: userBUsername, password: 'password123' }),
       });
       const body = await res.json();
       assert.strictEqual(res.status, 200);
@@ -112,7 +117,7 @@ describe('Coach-Life API', () => {
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'alice', password: 'wrong' }),
+        body: JSON.stringify({ username: userAUsername, password: 'wrong' }),
       });
       assert.strictEqual(res.status, 401);
     });
@@ -121,7 +126,7 @@ describe('Coach-Life API', () => {
       const loginRes = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'alice', password: 'password123' }),
+        body: JSON.stringify({ username: userAUsername, password: 'password123' }),
       });
       const loginBody = await loginRes.json();
 
@@ -140,7 +145,7 @@ describe('Coach-Life API', () => {
       const res = await fetch(`${baseUrl}/auth/reset-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'alice@mail.com' }),
+        body: JSON.stringify({ email: userAEmail }),
       });
       const body = await res.json();
       assert.strictEqual(res.status, 200);
@@ -159,7 +164,7 @@ describe('Coach-Life API', () => {
       const loginRes = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'alice', password: 'newpass456' }),
+        body: JSON.stringify({ username: userAUsername, password: 'newpass456' }),
       });
       assert.strictEqual(loginRes.status, 200);
 
@@ -167,7 +172,7 @@ describe('Coach-Life API', () => {
       const reqRes = await fetch(`${baseUrl}/auth/reset-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'alice@mail.com' }),
+        body: JSON.stringify({ email: userAEmail }),
       });
       const reqBody = await reqRes.json();
       await fetch(`${baseUrl}/auth/reset-password`, {
@@ -178,7 +183,7 @@ describe('Coach-Life API', () => {
       const relogin = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'alice', password: 'password123' }),
+        body: JSON.stringify({ username: userAUsername, password: 'password123' }),
       });
       const reloginBody = await relogin.json();
       userA.token = reloginBody.access_token;
