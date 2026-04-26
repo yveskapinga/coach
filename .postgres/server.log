@@ -1,0 +1,171 @@
+2026-04-26 09:29:19.189 CAT [102680] LOG:  starting PostgreSQL 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-04-26 09:29:19.189 CAT [102680] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-04-26 09:29:19.191 CAT [102680] FATAL:  could not create lock file "/var/run/postgresql/.s.PGSQL.5433.lock": Permission denied
+2026-04-26 09:29:19.193 CAT [102680] LOG:  database system is shut down
+2026-04-26 09:29:30.176 CAT [102694] LOG:  starting PostgreSQL 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-04-26 09:29:30.176 CAT [102694] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-04-26 09:29:30.178 CAT [102694] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5433"
+2026-04-26 09:29:30.183 CAT [102697] LOG:  database system was shut down at 2026-04-26 09:29:13 CAT
+2026-04-26 09:29:30.189 CAT [102694] LOG:  database system is ready to accept connections
+2026-04-26 09:29:32.260 CAT [102706] FATAL:  role "ykapinga-t1" does not exist
+2026-04-26 09:30:57.925 CAT [102873] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:30:57.925 CAT [102873] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:30:57.925 CAT [102873] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:30:58.919 CAT [102873] ERROR:  column "used" does not exist at character 94
+2026-04-26 09:30:58.919 CAT [102873] STATEMENT:  SELECT user_id FROM auth_sessions
+	       WHERE refresh_token = $1 AND expires_at > NOW() AND used = FALSE
+2026-04-26 09:30:59.973 CAT [102873] ERROR:  Day not found or access denied
+2026-04-26 09:30:59.973 CAT [102873] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:30:59.973 CAT [102873] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:30:59.987 CAT [102873] ERROR:  missing FROM-clause entry for table "c" at character 219
+2026-04-26 09:30:59.987 CAT [102873] QUERY:  SELECT jsonb_build_object(
+	    'user_id', p_user_id,
+	    'avg_completion', COALESCE(ROUND(AVG(completion_rate)), 0),
+	    'days_count', COUNT(*),
+	    'top_concepts', (
+	      SELECT jsonb_agg(jsonb_build_object('label', c.label, 'count', cnt))
+	      FROM (
+	        SELECT co.label, COUNT(*) as cnt
+	        FROM day_entries de
+	        JOIN concepts co ON de.concept_id = co.id
+	        JOIN days d ON de.day_id = d.id
+	        WHERE d.user_id = p_user_id AND d.date >= CURRENT_DATE - INTERVAL '30 days'
+	        GROUP BY co.label
+	        ORDER BY cnt DESC
+	        LIMIT 5
+	      ) t
+	    ),
+	    'common_failure_reasons', (
+	      SELECT jsonb_agg(jsonb_build_object('label', c.label, 'count', cnt))
+	      FROM (
+	        SELECT co.label, COUNT(*) as cnt
+	        FROM analysis_events ae
+	        JOIN concepts co ON ae.concept_id = co.id
+	        WHERE ae.user_id = p_user_id AND ae.type = 'FAILURE_REASON'
+	        AND ae.created_at >= NOW() - INTERVAL '30 days'
+	        GROUP BY co.label
+	        ORDER BY cnt DESC
+	        LIMIT 5
+	      ) t
+	    )
+	  )
+	                  FROM days
+	  WHERE user_id = p_user_id AND date >= CURRENT_DATE - INTERVAL '30 days'
+2026-04-26 09:30:59.987 CAT [102873] CONTEXT:  PL/pgSQL function get_user_patterns(uuid) line 5 at SQL statement
+2026-04-26 09:30:59.987 CAT [102873] STATEMENT:  SELECT get_user_patterns($1) as patterns
+2026-04-26 09:32:13.084 CAT [102951] ERROR:  missing FROM-clause entry for table "c" at character 219
+2026-04-26 09:32:13.084 CAT [102951] QUERY:  SELECT jsonb_build_object(
+	    'user_id', p_user_id,
+	    'avg_completion', COALESCE(ROUND(AVG(completion_rate)), 0),
+	    'days_count', COUNT(*),
+	    'top_concepts', (
+	      SELECT jsonb_agg(jsonb_build_object('label', c.label, 'count', cnt))
+	      FROM (
+	        SELECT co.label, COUNT(*) as cnt
+	        FROM day_entries de
+	        JOIN concepts co ON de.concept_id = co.id
+	        JOIN days d ON de.day_id = d.id
+	        WHERE d.user_id = p_user_id AND d.date >= CURRENT_DATE - INTERVAL '30 days'
+	        GROUP BY co.label
+	        ORDER BY cnt DESC
+	        LIMIT 5
+	      ) t
+	    ),
+	    'common_failure_reasons', (
+	      SELECT jsonb_agg(jsonb_build_object('label', c.label, 'count', cnt))
+	      FROM (
+	        SELECT co.label, COUNT(*) as cnt
+	        FROM analysis_events ae
+	        JOIN concepts co ON ae.concept_id = co.id
+	        WHERE ae.user_id = p_user_id AND ae.type = 'FAILURE_REASON'
+	        AND ae.created_at >= NOW() - INTERVAL '30 days'
+	        GROUP BY co.label
+	        ORDER BY cnt DESC
+	        LIMIT 5
+	      ) t
+	    )
+	  )
+	                  FROM days
+	  WHERE user_id = p_user_id AND date >= CURRENT_DATE - INTERVAL '30 days'
+2026-04-26 09:32:13.084 CAT [102951] CONTEXT:  PL/pgSQL function get_user_patterns(uuid) line 5 at SQL statement
+2026-04-26 09:32:13.084 CAT [102951] STATEMENT:  SELECT get_user_patterns($1) as p
+2026-04-26 09:33:16.193 CAT [103076] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:33:16.193 CAT [103076] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:33:16.193 CAT [103076] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:33:17.195 CAT [103076] ERROR:  column "used" does not exist at character 94
+2026-04-26 09:33:17.195 CAT [103076] STATEMENT:  SELECT user_id FROM auth_sessions
+	       WHERE refresh_token = $1 AND expires_at > NOW() AND used = FALSE
+2026-04-26 09:33:18.245 CAT [103076] ERROR:  Day not found or access denied
+2026-04-26 09:33:18.245 CAT [103076] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:33:18.245 CAT [103076] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:33:18.248 CAT [103076] ERROR:  Day not found or access denied
+2026-04-26 09:33:18.248 CAT [103076] CONTEXT:  PL/pgSQL function update_execution(uuid,uuid,jsonb) line 9 at RAISE
+2026-04-26 09:33:18.248 CAT [103076] STATEMENT:  SELECT update_execution($1, $2, $3::jsonb)
+2026-04-26 09:33:35.135 CAT [103131] ERROR:  insert or update on table "auth_sessions" violates foreign key constraint "auth_sessions_user_id_fkey"
+2026-04-26 09:33:35.135 CAT [103131] DETAIL:  Key (user_id)=(e603e804-75ea-473e-bba7-73024b472ec0) is not present in table "users".
+2026-04-26 09:33:35.135 CAT [103131] STATEMENT:  INSERT INTO auth_sessions (id, user_id, refresh_token, expires_at) VALUES (gen_random_uuid(), $1, $2, NOW() + INTERVAL '7 days')
+2026-04-26 09:34:22.930 CAT [103200] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:34:22.930 CAT [103200] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:34:22.930 CAT [103200] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:34:23.928 CAT [103200] ERROR:  column "used" does not exist at character 96
+2026-04-26 09:34:23.928 CAT [103200] STATEMENT:  SELECT user_id FROM auth_sessions
+	         WHERE refresh_token = $1 AND expires_at > NOW() AND used = FALSE
+2026-04-26 09:34:24.973 CAT [103200] ERROR:  Day not found or access denied
+2026-04-26 09:34:24.973 CAT [103200] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:34:24.973 CAT [103200] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:34:24.979 CAT [103200] ERROR:  Day not found or access denied
+2026-04-26 09:34:24.979 CAT [103200] CONTEXT:  PL/pgSQL function update_execution(uuid,uuid,jsonb) line 9 at RAISE
+2026-04-26 09:34:24.979 CAT [103200] STATEMENT:  SELECT update_execution($1, $2, $3::jsonb)
+2026-04-26 09:34:30.226 CAT [102695] LOG:  checkpoint starting: time
+2026-04-26 09:34:31.036 CAT [103238] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:34:31.036 CAT [103238] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:34:31.036 CAT [103238] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:34:32.027 CAT [103238] ERROR:  column "used" does not exist at character 96
+2026-04-26 09:34:32.027 CAT [103238] STATEMENT:  SELECT user_id FROM auth_sessions
+	         WHERE refresh_token = $1 AND expires_at > NOW() AND used = FALSE
+2026-04-26 09:34:33.076 CAT [103238] ERROR:  Day not found or access denied
+2026-04-26 09:34:33.076 CAT [103238] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:34:33.076 CAT [103238] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:34:33.080 CAT [103238] ERROR:  Day not found or access denied
+2026-04-26 09:34:33.080 CAT [103238] CONTEXT:  PL/pgSQL function update_execution(uuid,uuid,jsonb) line 9 at RAISE
+2026-04-26 09:34:33.080 CAT [103238] STATEMENT:  SELECT update_execution($1, $2, $3::jsonb)
+2026-04-26 09:35:08.769 CAT [103293] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:35:08.769 CAT [103293] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:35:08.769 CAT [103293] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:35:10.812 CAT [103293] ERROR:  Day not found or access denied
+2026-04-26 09:35:10.812 CAT [103293] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:35:10.812 CAT [103293] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:35:10.815 CAT [103293] ERROR:  Day not found or access denied
+2026-04-26 09:35:10.815 CAT [103293] CONTEXT:  PL/pgSQL function update_execution(uuid,uuid,jsonb) line 9 at RAISE
+2026-04-26 09:35:10.815 CAT [103293] STATEMENT:  SELECT update_execution($1, $2, $3::jsonb)
+2026-04-26 09:36:13.989 CAT [102695] LOG:  checkpoint complete: wrote 1038 buffers (6.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=103.756 s, sync=0.003 s, total=103.764 s; sync files=353, longest=0.001 s, average=0.001 s; distance=4968 kB, estimate=4968 kB; lsn=0/19EF7D0, redo lsn=0/19C9968
+2026-04-26 09:39:31.082 CAT [102695] LOG:  checkpoint starting: time
+2026-04-26 09:39:33.194 CAT [102695] LOG:  checkpoint complete: wrote 22 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.107 s, sync=0.002 s, total=2.113 s; sync files=21, longest=0.001 s, average=0.001 s; distance=154 kB, estimate=4487 kB; lsn=0/19F04D0, redo lsn=0/19F0498
+2026-04-26 09:42:51.617 CAT [103978] ERROR:  duplicate key value violates unique constraint "users_username_key"
+2026-04-26 09:42:51.617 CAT [103978] DETAIL:  Key (username)=(alice) already exists.
+2026-04-26 09:42:51.617 CAT [103978] STATEMENT:  INSERT INTO users (id, username, email, first_name, password_hash)
+	         VALUES ($1, $2, $3, $4, $5)
+	         RETURNING id, username, email, first_name, created_at
+2026-04-26 09:42:53.691 CAT [103978] ERROR:  Day not found or access denied
+2026-04-26 09:42:53.691 CAT [103978] CONTEXT:  PL/pgSQL function get_day_score(uuid,uuid) line 12 at RAISE
+2026-04-26 09:42:53.691 CAT [103978] STATEMENT:  SELECT get_day_score($1, $2) as score
+2026-04-26 09:42:53.695 CAT [103978] ERROR:  Day not found or access denied
+2026-04-26 09:42:53.695 CAT [103978] CONTEXT:  PL/pgSQL function update_execution(uuid,uuid,jsonb) line 9 at RAISE
+2026-04-26 09:42:53.695 CAT [103978] STATEMENT:  SELECT update_execution($1, $2, $3::jsonb)
+2026-04-26 09:44:31.242 CAT [102695] LOG:  checkpoint starting: time
+2026-04-26 09:44:35.261 CAT [102695] LOG:  checkpoint complete: wrote 41 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.013 s, sync=0.002 s, total=4.019 s; sync files=33, longest=0.001 s, average=0.001 s; distance=122 kB, estimate=4050 kB; lsn=0/1A0ED70, redo lsn=0/1A0ED38
+2026-04-26 10:04:31.498 CAT [102695] LOG:  checkpoint starting: time
+2026-04-26 10:04:35.516 CAT [102695] LOG:  checkpoint complete: wrote 41 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.013 s, sync=0.002 s, total=4.019 s; sync files=37, longest=0.002 s, average=0.001 s; distance=192 kB, estimate=3664 kB; lsn=0/1A3EF10, redo lsn=0/1A3EED8
+2026-04-26 10:06:46.043 CAT [105388] FATAL:  role "ykapinga-t1" does not exist
+2026-04-26 10:09:31.533 CAT [102695] LOG:  checkpoint starting: time
+2026-04-26 10:09:32.041 CAT [102695] LOG:  checkpoint complete: wrote 6 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.503 s, sync=0.002 s, total=0.509 s; sync files=6, longest=0.002 s, average=0.001 s; distance=6 kB, estimate=3299 kB; lsn=0/1A40B00, redo lsn=0/1A40AC8

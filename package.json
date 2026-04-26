@@ -1,0 +1,32 @@
+{
+  "name": "coach-life-api",
+  "version": "1.0.0",
+  "description": "Backend Fastify + pg pour Coach-Life — discipline personnelle multi-user",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/**/*.test.js",
+    "migrate": "node database/migrate.js"
+  },
+  "keywords": [
+    "fastify",
+    "postgresql",
+    "discipline",
+    "pwa"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cookie": "^9.3.0",
+    "@fastify/cors": "^9.0.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/static": "^7.0.4",
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.4.0",
+    "fastify": "^4.28.0",
+    "pg": "^8.11.0",
+    "uuid": "^9.0.0",
+    "web-push": "^3.6.7"
+  }
+}
